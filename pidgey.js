@@ -1,4 +1,5 @@
 #!/bin/env node
+
 const Discord = require("discord.js");
 const client = new Discord.Client();
 const config = require("./config.json");
@@ -9,19 +10,18 @@ const fs=require('fs');
 const poifinder = require("./poifind.js");
 poifinder.load(config.poifile);
 
+// Log start/stop and create a pid file
 if(config.pidfile) {
-    fs.writeFile(config.pidfile, process.pid);
-    fs.appendFile(config.logdir + "/run.log",(new Date()).toISOString() + " start ("+ process.pid  +")\n")
+    fs.writeFileSync(config.pidfile, process.pid);
+    fs.appendFileSync(config.logdir + "/run.log",(new Date()).toISOString() + " start ("+ process.pid  +")\n")
     let cleanup=function() {
-	fs.unlink(config.pidfile);
-	fs.appendFile(config.logdir + "/run.log",(new Date()).toISOString() + " stop ("+ process.pid  + ")\n" );
-	process.exit(2);
+	fs.unlink(config.pidfile, err => { console.log("no pidfile"); }  );
+	fs.appendFileSync(config.logdir + "/run.log",(new Date()).toISOString() + " stop ("+ process.pid  + ")\n" );
+	// process.exit(2);
     }
-
     process.on("exit", cleanup);
     process.on('SIGINT', cleanup);
     process.on('SIGTERM', cleanup);
-    
 }
 
 
@@ -41,7 +41,7 @@ client.on("message", async message => {
 	
 	let scope = "";
 	let clientMessage;
-	let matches, query, showHelp;
+	let matches = null, query, showHelp;
 
 	let maxHits = message.guild === null ? 250 : 10;
 
@@ -55,8 +55,15 @@ client.on("message", async message => {
 	    showHelp = true;
 
 	if(!showHelp) {
+	    // If numeric query, return poi by number (numbers which
+	    // are part of pois are excluded).
 	    query = args.join(" ");
-	    matches = poifinder.find(query, scope);
+	    if( /^[0-9]+$/.test(query)) {
+		matches = poifinder.getByNumber(query);
+	    }
+	    if(!matches || !matches.length) 
+		matches = poifinder.find(query, scope);
+
 	}
 
 	if(showHelp) {
@@ -83,12 +90,13 @@ client.on("message", async message => {
 	    embed
 		.setTitle(singleMatch[0]+" (" + singleMatch[1] + ")")
 		.setImage(mapurl)
-		.setDescription("[OpenStreetMap](http://www.openstreetmap.org/?mlat="+ singleMatch[2] +"&mlon=" +singleMatch[3] +"&zoom=15&layers=M)");
+		.setDescription("[OpenStreetMap→](http://www.openstreetmap.org/?mlat="+ singleMatch[2] +"&mlon=" +singleMatch[3] +"&zoom=15&layers=M)");
 	    
 	    clientMessage = {embed};
 	    
 	} else if(matches.length <= maxHits) {
-	    clientMessage = poifinder.listResults(matches);
+	    clientMessage = "Velg med !kart _nr_ \n";
+	    clientMessage += poifinder.listResults(matches);
 	} else { 
 	    clientMessage = 'For mange treff (' + matches.length  + '). Bruk message for å vise alle.';
 	}
