@@ -19,7 +19,7 @@ var load = function(file) {
     var fs = require('fs');
     mapdata = JSON.parse(fs.readFileSync(file, 'utf8'));
 
-    // Add a unique number to all fields which is not in the search set
+    // Add a unique number to all fields. Exclude numbers which exists in the search set
     var n, avoid={}
     mapdata.forEach(el =>  {
 	if (n=el[0].match(/\d+/g)) {
@@ -43,20 +43,22 @@ var find = function(name, poitype) {
 }
 
 // Return single match if any
-var singleMatch = function(mapres,name,poitype) {
+var singleMatch = function(mapres,name,poitype,returnExact = false) {
     // Single match
     if(mapres.length == 1)
 	return mapres[0];
-  
-    // If exact match, return this
-    var exactMatches=[]
-    mapres.forEach(el =>  {
-	if(name.toLowerCase()==el[0].trim().toLowerCase()) {
-	    exactMatches.push(el);
-	}
-    });
-    if(exactMatches.length == 1) 
-	return exactMatches[0];
+
+    // If exact match, return only this match
+    if(returnExact) {
+	var exactMatches=[]
+	mapres.forEach(el =>  {
+	    if(name.toLowerCase()==el[0].trim().toLowerCase()) {
+		exactMatches.push(el);
+	    }
+	});
+	if(exactMatches.length == 1) 
+	    return exactMatches[0];
+    }
 }
 
 var listResults = function(mapres) {
