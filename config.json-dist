@@ -1,0 +1,10 @@
+{ "token": "",
+  "prefix": "!",
+  "command": "kart",
+  "google_api_key": "",
+  "name": "pidgey",
+  "logdir":"logs",
+  "poifile":"data/poi.json",
+  "pidfile":"/tmp/pidgey.pid"
+}
+	
