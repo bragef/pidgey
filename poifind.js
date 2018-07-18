@@ -2,7 +2,10 @@
 var mapdata=[];
 
 var matchName= function(name,poitype) {
-    name=name.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    // Quote metacharacters
+    name=name.replace(/[-\/\\^$+?.()|[\]{}]/g, '\\$&');
+    name=name.replace('*','.*');
+    
     var re=new RegExp(name, 'i');
     return function(el) {
         if(poitype && poitype!=el[1])  return false;
@@ -29,7 +32,7 @@ var load = function(file) {
 	}
     });
     var j, i=100;
-    for(j=1;j<mapdata.length;j++) {
+    for(j=0;j<mapdata.length;j++) {
 	i++;
 	while(avoid[i] != undefined) i++;
 	mapdata[j][4]=i;

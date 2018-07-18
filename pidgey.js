@@ -98,7 +98,7 @@ client.on("message", async message => {
 	    clientMessage = "Velg med !kart _nr_ \n";
 	    clientMessage += poifinder.listResults(matches);
 	} else { 
-	    clientMessage = 'For mange treff (' + matches.length  + '). Bruk message for å vise alle.';
+	    clientMessage = 'For mange treff (' + matches.length  + '). Send direktemelding for å vise alle.';
 	}
 	
 		
@@ -117,6 +117,10 @@ client.on("message", async message => {
 	    });
     }
 
+});
+
+client.on("ready", () => {
+  client.user.setActivity(config.prefix + config.command);
 });
 
 client.on('error', function(error) {
