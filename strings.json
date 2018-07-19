@@ -1,0 +1,14 @@
+{
+    "no": {
+	"searchstring": "søkestreng",
+	"toomany":"For mange treff",
+	"showall":"Send direktemelding for å se alle.",
+	"selectmap":"Velg med !kart _nr_"
+    },
+    "en":{
+	"searchstring": "search term",
+	"toomany":"To many hits",
+	"showall":"Send direct message to view all.",
+	"selectmap":"Select map: !map _number_"
+    }
+}

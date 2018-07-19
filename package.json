@@ -1,11 +1,9 @@
 {
     "name": "pidgey",
     "description": "Discord bot to show map gyms and pokestops",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "dependencies": {
-        "csv": "^3.0.2",
-        "csv-parse": "^2.2.0",
         "discord.js": "^11.3.2",
-        "json2csv": "^4.1.2"
+        "csv-parse": "^2.2.0"
     }
 }

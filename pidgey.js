@@ -3,27 +3,20 @@
 const Discord = require("discord.js");
 const client = new Discord.Client();
 const config = require("./config.json");
+const strings = require("./strings.json");
 const process = require("process");
 const fs=require('fs');
-
 
 const poifinder = require("./poifind.js");
 poifinder.load(config.poifile);
 
-// Log start/stop and create a pid file
-if(config.pidfile) {
-    fs.writeFileSync(config.pidfile, process.pid);
-    fs.appendFileSync(config.logdir + "/run.log",(new Date()).toISOString() + " start ("+ process.pid  +")\n")
-    let cleanup=function() {
-	fs.unlink(config.pidfile, err => { console.log("no pidfile"); }  );
-	fs.appendFileSync(config.logdir + "/run.log",(new Date()).toISOString() + " stop ("+ process.pid  + ")\n" );
-	// process.exit(2);
-    }
-    process.on("exit", cleanup);
-    process.on('SIGINT', cleanup);
-    process.on('SIGTERM', cleanup);
+function writeLog(logfile, message) {
+    if(config.logdir == null)  return;
+    if(!fs.existsSync(config.logdir)) fs.mkdirSync(dir);
+    fs.appendFile(config.logdir  + "/" + logfile, 
+		  (new Date()).toISOString() + "\t" + message + "\n",
+		  function(err) {});
 }
-
 
 client.on("message", async message => {
 
@@ -42,13 +35,14 @@ client.on("message", async message => {
 	let scope = "";
 	let clientMessage;
 	let matches = null, query, showHelp;
-
+	
+	// Shop up to 10 hits in chats, 250 hits in dm's
 	let maxHits = message.guild === null ? 250 : 10;
 
 	// If no arguments, or single argument pokestop|gym, show help text
 	if(!args[0]) 
 	    showHelp = true;
-	if(!showHelp && ['pokestop','gym','portal'].includes(args[0].toLowerCase())) {
+	if(!showHelp && poifinder.isPoiType(args[0].toLowerCase())) {
 	    scope = args.shift().toLowerCase();
 	}
 	if(!args[0])
@@ -68,11 +62,11 @@ client.on("message", async message => {
 
 	if(showHelp) {
 	    const embed = new Discord.RichEmbed();
-	    embed.setTitle('Finn gymmer og pokestop i Bergen')
-		.setDescription('!kart [gym|pokestop] søkestreng');
+	    embed.setTitle(config.description)
+		.setDescription(config.prefix + config.command + strings[config.language]["searchstring"]);
 	    clientMessage = {embed};
 	    
-	} else if(matches.length == 0) {
+	} else if(!matches || matches.length == 0) {
 	    clientMessage = 'Ingen treff på ' +  query;
 	} else if(singleMatch = poifinder.singleMatch(matches, query, scope)) {
 	    clientMessage = 'Eksakt treff';
@@ -95,28 +89,22 @@ client.on("message", async message => {
 	    clientMessage = {embed};
 	    
 	} else if(matches.length <= maxHits) {
-	    clientMessage = "Velg med !kart _nr_ \n";
+	    clientMessage = strings[config.language]["selectmap"];
+	    clientMessage += "\n";
 	    clientMessage += poifinder.listResults(matches);
 	} else { 
-	    clientMessage = 'For mange treff (' + matches.length  + '). Send direktemelding for å vise alle.';
+	    clientMessage = strings[config.language]["toomany"] + ' (' + matches.length  + '). ';
+            clientMessage += strings[config.language]["showall"]; 
 	}
 	
 		
 	message.channel.send(clientMessage)
 	    .then(function(msg) {
-		if(config.logdir!=null) {
-		    fs.appendFile(config.logdir+"/searches.log",
-				  "" + (new Date()).toISOString() 
-				  + " " + message.channel.name +": ["+ matches.length + "] " + message + "\n"
-				  ,
-				  function(err) {}
-				 );
-		}
+		writeLog("searches.log",  " " + message.channel.name +": ["+ matches.length + "] " + message);
 	    }).catch(function(error) {
-		fs.appendFile(config.logdir + "/error.log",""+ (new Date()).toISOString() + "[ERROR]\n");
+		writeLog("error.log", "ERROR:  " + message.channel.name +":" + message);
 	    });
     }
-
 });
 
 client.on("ready", () => {
@@ -124,8 +112,8 @@ client.on("ready", () => {
 });
 
 client.on('error', function(error) {
-    fs.appendFile(config.logdir + "/error.log", error);
+    writeLog("error.log", error);
 });
+
 client.login(config.token);
            
-

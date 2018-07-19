@@ -1,5 +1,6 @@
 
 var mapdata=[];
+var poitypes={};
 
 var matchName= function(name,poitype) {
     // Quote metacharacters
@@ -22,8 +23,8 @@ var load = function(file) {
     var fs = require('fs');
     mapdata = JSON.parse(fs.readFileSync(file, 'utf8'));
 
-    // Add a unique number to all fields. Exclude numbers which exists in the search set
-    var n, avoid={}
+    // Find all numbers which are part of names of pois
+    var n, avoid={}, ptypes={};
     mapdata.forEach(el =>  {
 	if (n=el[0].match(/\d+/g)) {
 	    n.forEach(num => {
@@ -31,12 +32,16 @@ var load = function(file) {
 	    })
 	}
     });
+    // Add a unique number to all pois, excluding numbers which 
+    // are part of poi-names
     var j, i=100;
     for(j=0;j<mapdata.length;j++) {
 	i++;
 	while(avoid[i] != undefined) i++;
 	mapdata[j][4]=i;
+	ptypes[mapdata[j][1]]=true;
     }
+    poitypes=Object.keys(ptypes);
 }
 
 
@@ -47,6 +52,7 @@ var find = function(name, poitype) {
 
 // Return single match if any
 var singleMatch = function(mapres,name,poitype,returnExact = false) {
+
     // Single match
     if(mapres.length == 1)
 	return mapres[0];
@@ -73,10 +79,15 @@ var listResults = function(mapres) {
 }
 
 
+var isPoiType = function(str) {
+    return poitypes.includes(str);
+}
+
 module.exports = {
     load: load,
     listResults: listResults,
     singleMatch:singleMatch,
     getByNumber:getByNumber,
+    isPoiType:isPoiType,
     find: find
 }
