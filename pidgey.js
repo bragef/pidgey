@@ -84,7 +84,13 @@ client.on("message", async message => {
 	    embed
 		.setTitle(singleMatch[0]+" (" + singleMatch[1] + ")")
 		.setImage(mapurl)
-		.setDescription("[OpenStreetMap→](http://www.openstreetmap.org/?mlat="+ singleMatch[2] +"&mlon=" +singleMatch[3] +"&zoom=15&layers=M)");
+		.setDescription("[OpenStreetMap](http://www.openstreetmap.org/?mlat="+ 
+				singleMatch[2] +"&mlon=" +
+				singleMatch[3] +"&zoom=15&layers=M)" + 
+				" / " + 
+				"[GoogleNav](https://www.google.com/maps/dir/?api=1&dir_action=travelmode=walking&navigate&destination="+
+				 singleMatch[2] + "%2C" +  singleMatch[3] + ")"
+			       );
 	    
 	    clientMessage = {embed};
 	    
