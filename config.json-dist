@@ -5,7 +5,6 @@
   "name": "pidgey",
   "logdir":"logs",
   "poifile":"data/poi.json",
-  "pidfile":"/tmp/pidgey.pid",
   "language":"en"
 }
 	

@@ -1,14 +1,19 @@
 {
     "no": {
 	"searchstring": "søkestreng",
-	"toomany":"For mange treff",
-	"showall":"Send direktemelding for å se alle.",
-	"selectmap":"Velg med !kart _nr_"
+	"nomatches":"Ingen treff på _{term}_. ",
+	"toomany":"For mange treff ({num}). ",
+	"senddm":"Send direktemelding for å se alle. ",
+	"selectmap":"Velg med !kart _nr_",
+	"refinequery":"\nTips: bruk wildcard \\*, f.eks. !kart abc\\*xyz. "
+
     },
     "en":{
 	"searchstring": "search term",
-	"toomany":"To many hits",
-	"showall":"Send direct message to view all.",
-	"selectmap":"Select map: !map _number_"
+	"toomany":"To many hits ({num}). ",
+	"nomatches":"No matches for _{term}_. ",
+	"senddm":"Send direct message to view all. ",
+	"selectmap":"Select map: !map _number_ ",
+	"refinequery":"\nPlease refine your search and try again. Try using the \\* wildcard character eg !map abc\\*xyz "
     }
 }

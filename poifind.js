@@ -75,7 +75,7 @@ var listResults = function(mapres) {
     mapres.forEach(el => {
 	res.push("" + el[1]+": "+el[0] + " _"+el[4]+"_")
     });
-    return res.join("\n");
+    return res;
 }
 
 
