@@ -10,7 +10,14 @@ const fs=require('fs');
 const poifinder = require("./poifind.js");
 poifinder.load(config.poifile);
 
-function writeLog(logfile, message) {
+// Discord limitation
+const MAX_MESSAGE_SIZE = 2000;
+// Number of hits to show in guild
+const MAX_HITS_CHANNEL = 10;
+// Number if hits to show in DM
+const MAX_HITS_DM = 25;
+
+var writeLog = function(logfile, message) {
     if(config.logdir == null)  return;
     if(!fs.existsSync(config.logdir)) fs.mkdirSync(dir);
     fs.appendFile(config.logdir  + "/" + logfile, 
@@ -29,6 +36,7 @@ client.on("message", async message => {
     // Get command and argument if given. 
     const args = message.content.slice(config.prefix.length).trim().split(/ +/g);
     const command = args.shift().toLowerCase();
+    const isDirectMessage = ( message.guild === null );
 
     if(command===config.command) {
 	
@@ -36,8 +44,8 @@ client.on("message", async message => {
 	let clientMessage;
 	let matches = null, query, showHelp;
 	
-	// Shop up to 10 hits in chats, 250 hits in dm's
-	let maxHits = message.guild === null ? 250 : 10;
+	// Shop up to 10 matches in chats, 250 hits in dm's
+	let maxHits = isDirectMessage ? MAX_HITS_DM  : MAX_HITS_CHANNEL;
 
 	// If no arguments, or single argument pokestop|gym, show help text
 	if(!args[0]) 
@@ -49,27 +57,30 @@ client.on("message", async message => {
 	    showHelp = true;
 
 	if(!showHelp) {
-	    // If numeric query, return poi by number (numbers which
-	    // are part of pois are excluded).
+	    // If numeric query, return poi by number. This works
+	    // becase all numbers which are part of poi names are
+	    // are exclude.
 	    query = args.join(" ");
 	    if( /^[0-9]+$/.test(query)) {
 		matches = poifinder.getByNumber(query);
 	    }
 	    if(!matches || !matches.length) 
 		matches = poifinder.find(query, scope);
-
 	}
 
 	if(showHelp) {
+
 	    const embed = new Discord.RichEmbed();
 	    embed.setTitle(config.description)
 		.setDescription(config.prefix + config.command + strings[config.language]["searchstring"]);
 	    clientMessage = {embed};
 	    
 	} else if(!matches || matches.length == 0) {
-	    clientMessage = 'Ingen treff på ' +  query;
+	    
+	    clientMessage = strings[config.language]["nomatches"].replace('{term}',query);
+	    
 	} else if(singleMatch = poifinder.singleMatch(matches, query, scope)) {
-	    clientMessage = 'Eksakt treff';
+	    
 	    let coord=singleMatch[2]+","+singleMatch[3];
 	    let mapurl = 'https://maps.googleapis.com/maps/api/staticmap?size=512x512&zoom=15&scale=2&key=' + config.google_api_key;
 	    mapurl=mapurl + '&center='+coord;
@@ -89,21 +100,34 @@ client.on("message", async message => {
 				singleMatch[3] +"&zoom=15&layers=M)" + 
 				" / " + 
 				"[GoogleNav](https://www.google.com/maps/dir/?api=1&dir_action=travelmode=walking&navigate&destination="+
-				 singleMatch[2] + "%2C" +  singleMatch[3] + ")"
+				 coord + ")"
 			       );
 	    
 	    clientMessage = {embed};
 	    
 	} else if(matches.length <= maxHits) {
+
 	    clientMessage = strings[config.language]["selectmap"];
 	    clientMessage += "\n";
-	    clientMessage += poifinder.listResults(matches);
+	    clientMessage += poifinder.listResults(matches).join("\n");
+	    
+	    // Too long messages will be rejected by server
+	    if(clientMessage.length > MAX_MESSAGE_SIZE ) {
+		clientMessage =  strings[config.language]["toomany"].replace('{num}', matches.length);
+		clientMessage += strings[config.language]["refinequery"];
+	    }
+	    
+	    
 	} else { 
-	    clientMessage = strings[config.language]["toomany"] + ' (' + matches.length  + '). ';
-            clientMessage += strings[config.language]["showall"]; 
+	    
+	    clientMessage = strings[config.language]["toomany"].replace('{num}', matches.length);
+	    
+	    if (!isDirectMessage &&  matches.length <  MAX_HITS_DM) 
+		clientMessage += strings[config.language]["senddm"];
+	    else 
+		clientMessage += strings[config.language]["refinequery"];
 	}
-	
-		
+
 	message.channel.send(clientMessage)
 	    .then(function(msg) {
 		writeLog("searches.log",  " " + message.channel.name +": ["+ matches.length + "] " + message);
@@ -117,7 +141,7 @@ client.on("ready", () => {
   client.user.setActivity(config.prefix + config.command);
 });
 
-client.on('error', function(error) {
+client.on('error', (error) => {
     writeLog("error.log", error);
 });
 
