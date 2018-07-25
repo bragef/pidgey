@@ -81,7 +81,7 @@ client.on("message", async message => {
 	    
 	} else if(singleMatch = poifinder.singleMatch(matches, query, scope)) {
 	    
-	    let coord=singleMatch[2]+","+singleMatch[3];
+	    let coord=singleMatch[2]+"%2C"+singleMatch[3];
 	    let mapurl = 'https://maps.googleapis.com/maps/api/staticmap?size=512x512&zoom=15&scale=2&key=' + config.google_api_key;
 	    mapurl=mapurl + '&center='+coord;
 	    if(singleMatch['1']=='gym') 
