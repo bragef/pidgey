@@ -19,7 +19,7 @@ const MAX_HITS_DM = 25;
 
 var writeLog = function(logfile, message) {
     if(config.logdir == null)  return;
-    if(!fs.existsSync(config.logdir)) fs.mkdirSync(dir);
+    if(!fs.existsSync(config.logdir)) fs.mkdirSync(config.logdir);
     fs.appendFile(config.logdir  + "/" + logfile, 
 		  (new Date()).toISOString() + "\t" + message + "\n",
 		  function(err) {});
