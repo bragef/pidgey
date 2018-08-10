@@ -99,7 +99,7 @@ client.on("message", async message => {
 				singleMatch[2] +"&mlon=" +
 				singleMatch[3] +"&zoom=15&layers=M)" + 
 				" / " + 
-				"[GoogleNav](https://www.google.com/maps/dir/?api=1&dir_action=travelmode=walking&navigate&destination="+
+				"[Google Maps](https://www.google.com/maps/dir/?api=1&dir_action=travelmode=walking&navigate&destination="+
 				 coord + ")"
 			       );
 	    
