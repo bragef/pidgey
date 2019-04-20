@@ -10,6 +10,8 @@ const fs=require('fs');
 const poifinder = require("./poifind.js");
 poifinder.load(config.poifile);
 
+var POIfile = require("./data/poi.json");
+
 // Discord limitation
 const MAX_MESSAGE_SIZE = 2000;
 // Number of hits to show in guild
@@ -46,6 +48,9 @@ client.on("message", async message => {
 	
 	// Shop up to 10 matches in chats, 250 hits in dm's
 	let maxHits = isDirectMessage ? MAX_HITS_DM  : MAX_HITS_CHANNEL;
+
+	//If portal lookup is true, add reaction message to edit poi.json
+	var portalLookup = false;
 
 	// If no arguments, or single argument pokestop|gym, show help text
 	if(!args[0]) 
@@ -103,8 +108,14 @@ client.on("message", async message => {
 				" / " +
 				"[StreetView](https://www.google.com/maps/?q=&layer=c&cbll="+ coord + ")"
 			       );
-	    
 	    clientMessage = {embed};
+
+	    if (singleMatch[1] == "portal") {
+	    	console.log("A portal has been looked up");
+	    	portalLookup = true;
+	    }
+
+	    
 	    
 	} else if(matches.length <= maxHits) {
 
@@ -131,12 +142,48 @@ client.on("message", async message => {
 
 	message.channel.send(clientMessage)
 	    .then(function(msg) {
-		writeLog("searches.log",  " " + message.channel.name +": ["+ matches.length + "] " + message);
-	    }).catch(function(error) {
-		writeLog("error.log", "ERROR:  " + message.channel.name +":" + message);
+	    	if (portalLookup == true) {
+	    		const stopEmoji = message.guild.emojis.find('name', 'pokestop');
+	    		const gymEmoji = message.guild.emojis.find('name', 'gym');
+	    		msg.react(stopEmoji).then(() => msg.react(gymEmoji));
+	    		
+	    		const filter = (reaction, user) => {
+					return [stopEmoji, gymEmoji].includes(reaction.emoji) && user.id === message.author.id;
+				};
+
+				msg.awaitReactions(filter, {max: 1, time: 60000, errors: ['time']})
+					.then(collected => {
+						const reaction = collected.first();
+
+						if (reaction.emoji === stopEmoji) {
+							setPOItype("pokestop" ,singleMatch[2], singleMatch[3]);
+							message.reply('Registrert som pokestop. OBS: vises ved neste omstart av Pidgey');
+						} 
+						else if (reaction.emojie === gymEmoji) {
+							setPOItype("gym" ,singleMatch[2], singleMatch[3]);
+							message.reply('Registrert som gym. OBS: vises ved neste omstart av Pidgey');
+						}
+					})
+					.catch(collected => {
+						message.reply("Ingen reaksjoner registert. Vennligst registrer om dette er en gym eller stop ved å søke på nytt.");
+					});
+	    	}
+			writeLog("searches.log",  " " + message.channel.name +": ["+ matches.length + "] " + message);
+	    	}).catch(function(error) {
+			writeLog("error.log", "ERROR:  " + message.channel.name +":" + message);
 	    });
     }
 });
+
+function setPOItype(type, lat, lng) {
+	for (var i = POIfile.length - 1; i >= 0; i--) {
+		if (POIfile[i][2] === lat && POIfile[i][3] === lng) {
+			POIfile[i][1] = type;
+			fs.writeFileSync('./data/poi.json', JSON.stringify(POIfile, null, 4));
+			return;
+		}
+	};
+}
 
 client.on("ready", () => {
   client.user.setActivity(config.prefix + config.command);
