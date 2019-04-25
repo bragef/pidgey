@@ -159,7 +159,7 @@ client.on("message", async message => {
 							setPOItype("pokestop" ,singleMatch[2], singleMatch[3]);
 							message.reply('Registrert som pokestop. OBS: vises ved neste omstart av Pidgey');
 						} 
-						else if (reaction.emojie === gymEmoji) {
+						else if (reaction.emoji === gymEmoji) {
 							setPOItype("gym" ,singleMatch[2], singleMatch[3]);
 							message.reply('Registrert som gym. OBS: vises ved neste omstart av Pidgey');
 						}
