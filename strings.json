@@ -4,7 +4,7 @@
 	"nomatches":"Ingen treff på _{term}_. ",
 	"toomany":"For mange treff ({num}). ",
 	"senddm":"Send direktemelding for å se alle. ",
-	"selectmap":"Velg med !kart _nr_",
+	"selectmap":"Velg med !kart _nr_, eller ved å klikke på et nummer.",
 	"refinequery":"\nTips: bruk wildcard \\*, f.eks. !kart abc\\*xyz. "
 
     },
@@ -13,7 +13,7 @@
 	"toomany":"To many hits ({num}). ",
 	"nomatches":"No matches for _{term}_. ",
 	"senddm":"Send direct message to view all. ",
-	"selectmap":"Select map: !map _number_ ",
+	"selectmap":"Select map: !map _number_, or by clicking one of the numbers",
 	"refinequery":"\nPlease refine your search and try again. Try using the \\* wildcard character eg !map abc\\*xyz "
     }
 }
