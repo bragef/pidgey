@@ -3,15 +3,17 @@ var poitypes = {};
 
 var matchName = function(name, poitype) {
   // Quote metacharacters
-  name = name.replace(/[-/\\^$+?.()|[\]{}]/g, "\\$&");
-  name = name.replace("*", ".*");
-
-  var re = new RegExp(name, "i");
-  return function(el) {
-    if (poitype && poitype != el[1]) return false;
-    if (!name) return false;
-    return re.test(el[0]);
-  };
+    name = name.replace(/[-/\\^$+?.()|[\]{}]/g, "\\$&");
+    name = name.replace("*", ".*");
+    // Use "-s to get exact match
+    name=name.replace(/^"(.*)"$/,"^$1$") 
+    
+    var re = new RegExp(name, "i");
+    return function(el) {
+	if (poitype && poitype != el[1]) return false;
+	if (!name) return false;
+	return re.test(el[0]);
+    };
 };
 
 var getByNumber = function(idx) {
@@ -79,11 +81,14 @@ var emoji = [
   ":nine:",
   ":keycap_ten:"
 ];
-var listResults = function(mapres) {
+var listResults = function(mapres, showEmojis = true) {
   var res = [];
   mapres.forEach((el, i) => {
-    if (i >= 10) res.push(el[1] + ": " + el[0] + " _" + el[4] + "_");
-    else res.push(emoji[i] + " " + el[1] + ": " + el[0] + " _" + el[4] + "_");
+      if(i <= 10 && showEmojis) {
+	  res.push(emoji[i] + " " + el[1] + ": " + el[0] + " _" + el[4] + "_");
+      } else {
+	  res.push(el[1] + ": " + el[0] + " _" + el[4] + "_");
+      }
   });
   return res;
 };
