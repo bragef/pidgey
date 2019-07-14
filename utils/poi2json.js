@@ -29,7 +29,7 @@ allpois=allpois.filter(function(el) {
     return ! ( el[0].length < 3 || isNaN(el[3]) || isNaN(el[3] ) )
 })
 
-seen={};
+let seen={};
 
 var poiid = function(el) {
     return (el[0]+"/"+el[2]+"/"+el[3]);
@@ -49,6 +49,6 @@ allpois=allpois.filter(function(el) {
 });
 
 
-console.log(JSON.stringify(allpois, null, "\t"));
+//console.log(JSON.stringify(allpois, null, "\t"));
 
 // console.log(allpois.map(function(el) { return el.join("\t"); }).join("\n"));

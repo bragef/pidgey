@@ -4,7 +4,6 @@ const Discord = require("discord.js");
 const client = new Discord.Client();
 const config = require("./config.json");
 const strings = require("./strings.json");
-const process = require("process");
 const fs = require('fs');
 
 const poifinder = require("./poifind.js");
@@ -26,7 +25,7 @@ let writeLog = function (logfile, message) {
 	if (!fs.existsSync(config.logdir)) fs.mkdirSync(config.logdir);
 	fs.appendFile(config.logdir + "/" + logfile,
 		(new Date()).toISOString() + "\t" + message + "\n",
-		function (err) { });
+		function () { });
 }
 
 let createClientMsgOneMatch = function (singleMatch) {
@@ -56,36 +55,38 @@ let createClientMsgOneMatch = function (singleMatch) {
 	msg = { embed };
 	let portalLookup = false;
 	if (singleMatch[1] == "portal") {
-		console.log("A portal has been looked up");
+		//console.log("A portal has been looked up");
 		portalLookup = true;
 	}
 	return [msg, portalLookup];
 }
 
-let portalLookupMsg = async function (message, msg) {
-	const stopEmoji = message.guild.emojis.find(x => x.name === 'pokestop');
-	const gymEmoji = message.guild.emojis.find(x => x.name === 'gym');
-	msg.react(stopEmoji).then(() => msg.react(gymEmoji));
+let portalLookupMsg = async function (originalMsg, portalReplyMsg, singleMatch) {
+	const stopEmoji = originalMsg.guild.emojis.find(x => x.name === 'pokestop');
+	const gymEmoji = originalMsg.guild.emojis.find(x => x.name === 'gym');
+	portalReplyMsg.react(stopEmoji).then(() => portalReplyMsg.react(gymEmoji));
 
 	const filter = (reaction, user) => {
-		return [stopEmoji, gymEmoji].includes(reaction.emoji) && user.id === message.author.id;
+		return [stopEmoji, gymEmoji].includes(reaction.emoji) && user.id === originalMsg.author.id;
 	};
 
-	msg.awaitReactions(filter, { max: 1, time: 60000, errors: ['time'] })
+	portalReplyMsg.awaitReactions(filter, { max: 1, time: 60000, errors: ['time'] })
 		.then(collected => {
 			const reaction = collected.first();
 
 			if (reaction.emoji === stopEmoji) {
 				setPOItype("pokestop", singleMatch[2], singleMatch[3]);
-				message.reply('Registrert som pokestop. OBS: vises ved neste omstart av Pidgey');
+				originalMsg.reply('Registrert som pokestop. OBS: vises ved neste omstart av Pidgey');
 			}
 			else if (reaction.emoji === gymEmoji) {
 				setPOItype("gym", singleMatch[2], singleMatch[3]);
-				message.reply('Registrert som gym. OBS: vises ved neste omstart av Pidgey');
+				originalMsg.reply('Registrert som gym. OBS: vises ved neste omstart av Pidgey');
 			}
+			portalReplyMsg.clearReactions();
 		})
-		.catch(collected => {
-			message.reply("Ingen reaksjoner registert. Vennligst registrer om dette er en gym eller stop ved å søke på nytt.");
+		.catch(function(){
+			originalMsg.reply("Ingen reaksjoner registert. Vennligst registrer om dette er en gym eller stop ved å søke på nytt.");
+			portalReplyMsg.clearReactions();
 		});
 	
 }
@@ -103,6 +104,8 @@ client.on("message", async message => {
 	const command = args.shift().toLowerCase();
 	const isDirectMessage = (message.guild === null);
 
+	let singleMatch;
+
 	if (command === config.command) {
 
 		let scope = "";
@@ -113,7 +116,7 @@ client.on("message", async message => {
 		let maxHits = isDirectMessage ? MAX_HITS_DM : MAX_HITS_CHANNEL;
 
 		//If portal lookup is true, add reaction message to edit poi.json
-		var portalLookup = false;;
+		var portalLookup = false;
 
 		// If no arguments, or single argument pokestop|gym, show help text
 		if (!args[0])
@@ -146,7 +149,7 @@ client.on("message", async message => {
 
 			clientMessage = strings[config.language]["nomatches"].replace('{term}', query);
 
-		} else if (singleMatch = poifinder.singleMatch(matches, query, scope)) {
+		} else if ((singleMatch = poifinder.singleMatch(matches, query, scope) == true)) {
 
 			[clientMessage, portalLookup] = createClientMsgOneMatch(singleMatch)
 
@@ -175,11 +178,11 @@ client.on("message", async message => {
 		await message.channel.send(clientMessage)
 			.then(async function (msg) {
 				if (portalLookup == true && !isDirectMessage) { // Emoji does not exist on pm, it only exist in guild / server
-					portalLookupMsg(message, msg);
+					portalLookupMsg(message, msg, singleMatch);
 				}
 				else if (matches.length > 1 && matches.length <= maxHits) {
 					let i;
-					let maxReactions = Math.min(10, matches.length);
+					let maxReactions = Math.min(MAX_HITS_CHANNEL, matches.length);
 					for (i = 1; i <= maxReactions; i++) { // Await makes the emoji appear in order
 						await msg.react(REACTION_EMOJI[i]); 
 					}
@@ -197,19 +200,22 @@ client.on("message", async message => {
 
 							let reply = "";
 							[reply, portalLookup] = createClientMsgOneMatch(singleMatch);
-							message.channel.send(reply).then(async function (msg) {
+							message.channel.send(reply).then(async function (replymsg) {
 								if (portalLookup == true && !isDirectMessage) { // Emoji does not exist on pm, it only exist in guild / server) 
-									portalLookupMsg(message, msg);
+									portalLookupMsg(message, replymsg);
 								}
+							}).then(function(){
+								msg.clearReactions();
 							})
 						})
-						.catch(collected => {
-							console.log(collected)
-							message.reply("Reaction timed out,");
+						.catch(function() {
+							msg.reply("Ingen reaksjoner registert. Vennligst registrer om dette er en gym eller stop ved å søke på nytt.");
+							msg.clearReactions();
+							
 						});
 				}
 				writeLog("searches.log", " " + message.channel.name + ": [" + matches.length + "] " + message);
-			}).catch(function (error) {
+			}).catch(function () {
 				writeLog("error.log", "ERROR:  " + message.channel.name + ":" + message);
 			});
 	}
@@ -222,7 +228,7 @@ function setPOItype(type, lat, lng) {
 			fs.writeFileSync('./data/poi.json', JSON.stringify(POIfile, null, 4));
 			return;
 		}
-	};
+	}
 }
 
 client.on("ready", () => {
