@@ -5,5 +5,8 @@
     "dependencies": {
         "discord.js": "^11.3.2",
         "csv-parse": "^2.2.0"
+    },
+    "scripts": {
+        "start": "node pidgey.js"
     }
 }

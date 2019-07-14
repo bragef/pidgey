@@ -70,10 +70,13 @@ var singleMatch = function(mapres,name,poitype,returnExact = false) {
     }
 }
 
+var emoji = [":one:", ":two:", ":three:",
+":four:", ":five:", ":six:", ":seven:", ":eight:", ":nine:", ":keycap_ten:"]
 var listResults = function(mapres) {
     var res = [];
-    mapres.forEach(el => {
-	res.push("" + el[1]+": "+el[0] + " _"+el[4]+"_")
+    mapres.forEach((el,i) => {
+	if(i >= 10) res.push(el[1]+": "+el[0] + " _"+el[4]+"_")
+	else res.push(emoji[i] + " " + el[1]+": "+el[0] + " _"+el[4]+"_")
     });
     return res;
 }
