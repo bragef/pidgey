@@ -28,7 +28,7 @@ let writeLog = function (logfile, message) {
 		  function () { });
 }
 
-let createClientMsgOneMatch = function (singleMatch) {
+let createClientMsgSingleMatch = function (singleMatch) {
     let msg = {};
     let coord = singleMatch[2] + "," + singleMatch[3];
     let mapurl = 'https://maps.googleapis.com/maps/api/staticmap?size=512x512&zoom=15&scale=2&key=' + config.google_api_key;
@@ -151,7 +151,7 @@ client.on("message", async message => {
 	    
 	} else if(singleMatch = poifinder.singleMatch(matches, query, scope)) {
 	    
-	    [clientMessage, portalLookup] = createClientMsgOneMatch(singleMatch)
+	    [clientMessage, portalLookup] = createClientMsgSingleMatch(singleMatch)
 	    
 	} else if (matches.length <= maxHits) {
 	    
@@ -177,7 +177,9 @@ client.on("message", async message => {
 	//Send message to channel
 	await message.channel.send(clientMessage)
 	    .then(async function (msg) {
-		if (portalLookup == true && config.portalmenu &&  !isDirectMessage) { // Emoji does not exist on pm, it only exist in guild / server
+		let currentMap=false;
+		if (portalLookup == true && config.portalmenu &&  !isDirectMessage) { 
+		    // Emoji does not exist on pm, it only exist in guild / server
 		    portalLookupMsg(message, msg, singleMatch);
 		}
 		else if (matches.length > 1 && matches.length <= maxHits) {
@@ -190,57 +192,32 @@ client.on("message", async message => {
                     
 		    let collector = msg.createReactionCollector(filter, { time: 60000 });
 		    collector.on('collect', (reaction, collector) => {                                                                    
-			let index = REACTION_EMOJI.findIndex(x => x === reaction.emoji.name);                                                         
-                        singleMatch = matches[index-1];                                                                                               
-                        [reply, portalLookup] = createClientMsgOneMatch(singleMatch);  
+			let index = REACTION_EMOJI.findIndex(x => x === reaction.emoji.name);
+                        singleMatch = matches[index-1];
+                        [reply, portalLookup] = createClientMsgSingleMatch(singleMatch);
+			if(currentMap) {
+			    currentMap.delete();
+			    currentMap=false;
+			}
                         
-                        message.channel.send(reply).then(async function (replymsg) {                                                                  
-                            if (portalLookup == true && config.portalmenu  && !isDirectMessage) {                                                     
-                                // Emoji does not exist on pm, it only exist in guild / server)                                                       
-                                portalLookupMsg(message, replymsg);
+                        message.channel.send(reply).then(async function (replymsg) {
+			    currentMap = replymsg;
+                            if (portalLookup == true && config.portalmenu  && !isDirectMessage) {
+                                // Emoji does not exist on pm, it only exist in guild / server)
+				portalLookupMsg(message, replymsg);
                             }
                         })
                     })
-                    collector.on('end',() => {
+		    collector.on('end',() => {
+			// Avoid msg.clearReactions() since pidgey does not reqiure the necessary permimssions.
                         msg.reactions.filter(u => u.me).forEach(function(r) { 
-                            r.remove();                                                           
+                            r.remove(); 
                         })
                     });
 		    
 		  for (i = 1; i <= maxReactions; i++) { // Await makes the emoji appear in order
 		      await msg.react(REACTION_EMOJI[i]); 
 		  }
-		  
-		  /*		    
-		    msg.awaitReactions(filter, { max: 1, time: 60000, errors: ['time'] })
-			.then(collected => {
-			    const reaction = collected.first();
-			    
-			    let index = REACTION_EMOJI.findIndex(x => x === reaction.emoji.name);
-			    singleMatch = matches[index-1];
-			    
-			    let reply = "";
-			    [reply, portalLookup] = createClientMsgOneMatch(singleMatch);
-			    message.channel.send(reply).then(async function (replymsg) {
-				if (portalLookup == true && config.portalmenu  && !isDirectMessage) { 
-				    // Emoji does not exist on pm, it only exist in guild / server) 
-				    portalLookupMsg(message, replymsg);
-				}
-			    }).then(function(){
-				//msg.clearReactions();
-				msg.delete();
-			    })
-			})
-			.catch(function() {
-			    msg.reactions.filter(u => u.me).forEach(function(r) {
-				r.remove();
-			    })
-			    //msg.reply("Ingen reaksjoner registert. Vennligst registrer om dette er en gym eller stop ved å søke på nytt.");
-			    //msg.clearReactions();
-			    
-			});
-
-		 */   
 		}
 		writeLog("searches.log", " " + message.channel.name + ": [" + matches.length + "] " + message);
 	    }).catch(function () {
