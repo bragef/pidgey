@@ -17,7 +17,7 @@ Checkout the git.
 
 Run npm install to install the dependencies.
 
-Create a config.json, using config.json-dist as a template.
+Create a config.json, using config.example.json as a template.
 
 
 | Parameter | Description |
@@ -25,7 +25,7 @@ Create a config.json, using config.json-dist as a template.
 | token |  Discord bot token. See  https://github.com/reactiflux/discord-irc/wiki/Creating-a-discord-bot-&-getting-a-token | 
 | command | Map command | 
 | google_api_key | Google static map api key https://developers.google.com/maps/documentation/maps-static/intro | 
-| poifile | JSON file with pois. See data/poi.json-sample for format. | 
+| poifile | JSON file with pois. See data/poi.example.json for format. | 
 
 
 ## Screenshots
