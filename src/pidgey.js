@@ -3,7 +3,7 @@
 const Discord = require("discord.js");
 const client = new Discord.Client();
 const config = require("./config.json");
-const strings = require("./strings.json");
+const strings = require("./lang/strings.json");
 const fs = require('fs');
 
 const poifinder = require("./poifind.js");
