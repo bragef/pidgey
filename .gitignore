@@ -1,2 +1,6 @@
 node_modules
 .idea
+
+# Ignore config files so nobody is uploading their token etc.
+config.json
+data/poi.json

@@ -1,0 +1,10 @@
+{
+  "token": "",
+  "prefix": "!",
+  "command": "map",
+  "google_api_key": "",
+  "name": "pidgey",
+  "logdir": "logs",
+  "poifile": "data/poi.json",
+  "language": "en"
+}
