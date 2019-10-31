@@ -1,15 +1,15 @@
 {
-    "name": "pidgey",
-    "description": "Discord bot to show map gyms and pokestops",
-    "version": "0.2.1",
-    "dependencies": {
-        "csv-parse": "^4.6.5",
-        "discord.js": "^11.3.2"
-    },
-    "scripts": {
-        "start": "node pidgey.js"
-    },
-    "devDependencies": {
-        "eslint": "^5.16.0"
-    }
+  "name": "pidgey",
+  "description": "Discord bot to show map gyms and pokestops",
+  "version": "0.2.1",
+  "dependencies": {
+    "csv-parse": "^4.6.5",
+    "discord.js": "^11.3.2"
+  },
+  "scripts": {
+    "start": "node src/pidgey.js"
+  },
+  "devDependencies": {
+    "eslint": "^5.16.0"
+  }
 }
